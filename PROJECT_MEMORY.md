@@ -22,12 +22,17 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 
 ## Current state
 
-- Planning stage. This workspace was empty before these context files were added.
-- No application, scanner, service, or driver has been implemented or verified.
-- The latest discussion concerns the appearance of the local desktop UI.
+- Implemented the 0.1 local desktop prototype in C#/.NET 10/WPF.
+- Core: content-addressed file versions, checked restore-as-copy, persisted
+  settings/activity/scan outcome, file-change observation, and Defender adapter.
+- Six real desktop pages: Overview, Scans, Devices, Recovery, Activity, Settings.
+- Local validation: 31 scenarios passed; harmless real Defender scan completed;
+  desktop pages/recovery smoke and installer/uninstaller retention tests passed.
+- No privileged service, driver, USB blocking, malware containment, or remote
+  management is implemented. Version capture occurs after changes, while UI is open.
 - Analysis/design documents and an implementation roadmap have now been written.
-- The supplied remote had no advertised refs when checked. This workspace was
-  initialized on `main` and connected to it as `origin`; no commit or push yet.
+- Initial design/docs committed and pushed to `main`; implementation is on
+  `feature/local-desktop-app` and is being prepared for PR/CI/release.
 - A local UI concept was prepared with Windows-sidebar and compact-workspace
   variants. This is a sample-data design preview, not a functioning security app.
 - Proposed navigation: Overview, Scans, Devices, Recovery, Quarantine, Activity,

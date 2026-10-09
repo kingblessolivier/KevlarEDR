@@ -1,0 +1,36 @@
+name: Windows validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install installer compiler
+        run: choco install innosetup --yes --no-progress
+      - name: Build, simulate, smoke-test, and package
+        shell: pwsh
+        run: ./scripts/package.ps1
+      - name: Install, test, uninstall, and verify data retention
+        shell: pwsh
+        run: ./scripts/test-install.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: KevlarEDR-windows-x64
+          path: |
+            artifacts/*.exe
+            artifacts/*.zip
+            artifacts/SHA256SUMS.txt
+            artifacts/desktop-smoke.json
+            artifacts/desktop-smoke.png
+            artifacts/installed-desktop-smoke.json
+            artifacts/installer-validation.json
+          if-no-files-found: error

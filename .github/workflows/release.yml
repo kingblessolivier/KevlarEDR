@@ -1,0 +1,36 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install installer compiler
+        run: choco install innosetup --yes --no-progress
+      - name: Build, simulate, smoke-test, and package
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/KevlarEDR.Desktop/KevlarEDR.Desktop.csproj -Raw
+          if ($env:GITHUB_REF_NAME -ne ('v' + $project.Project.PropertyGroup.Version)) { throw 'Tag and application versions do not match.' }
+          ./scripts/package.ps1
+      - name: Verify installation and recovery-data retention
+        shell: pwsh
+        run: ./scripts/test-install.ps1
+      - name: Publish prototype release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseAssets = @(Get-ChildItem artifacts -File | Where-Object { $_.Extension -in @('.exe','.zip') } | ForEach-Object FullName)
+          gh release create $env:GITHUB_REF_NAME @releaseAssets artifacts/SHA256SUMS.txt --verify-tag --prerelease --title "KevlarEDR $env:GITHUB_REF_NAME — Windows prototype" --notes-file docs/release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }

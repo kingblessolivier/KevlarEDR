@@ -1,11 +1,12 @@
 # Install KevlarEDR on Windows
 
-These instructions describe the intended 0.1 package; verify its existence and
-tested version in release notes before distributing it.
+Version 0.1 provides a setup executable and a portable archive. See release notes
+and validation evidence for the exact tested environment.
 
 ## Requirements
 
-- Windows x64. Initial verification will record the exact tested Windows build.
+- Windows 11 x64; verified locally on Windows 11 Pro build 26200. Other Windows
+  versions/architectures require separate validation.
 - Permission to install/run a per-user application and write its local data.
 - Space for the application, selected versions, and restored copies.
 - Microsoft Defender installed/available for scanning. Recovery is independent
@@ -13,7 +14,8 @@ tested version in release notes before distributing it.
 
 ## Setup package
 
-1. Obtain `KevlarEDR-Setup-0.1.0-win-x64.exe` and its checksums from the release.
+1. Obtain `KevlarEDR-Setup-0.1.0-win-x64.exe` and its checksums from the
+   [release page](https://github.com/kingblessolivier/KevlarEDR/releases).
 2. Compare SHA-256 using `Get-FileHash -Algorithm SHA256 <package-path>`.
 3. Check release notes for unsigned prototype status. Do not disable antivirus,
    firewall, or other protections to install it.
