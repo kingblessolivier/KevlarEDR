@@ -26,8 +26,10 @@ Windows x64 packages are produced under `artifacts/` by the packaging script.
 The self-contained application does not require a separate .NET runtime.
 Defender must be installed and available for its scan integration.
 
-The Windows interface includes native computer/drive/USB icons, actual storage
-capacity bars, component status, and searchable recovery and activity workspaces.
+The File Explorer-style interface starts with This PC: real drives/personal folders,
+local filesystem browsing, native file-type icons, Details/Icons views, path/history
+navigation, filename filtering, and file information. System shows local computer
+and component details; recovery and activity are searchable.
 
 ## Develop
 

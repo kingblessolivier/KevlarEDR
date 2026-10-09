@@ -1,9 +1,24 @@
 # KevlarEDR user guide
 
-The sidebar provides Overview, Scans, Devices, Recovery, Activity, and Settings.
-Computer, drive, USB, and folder icons identify the matching controls. Drive bars
-show used storage capacity, not a security score. Recovery and Activity include
-search fields; type part of a file path or event to filter the local records.
+The app opens to This PC, like a Windows filesystem workspace. The sidebar also
+provides Scans, Devices, Recovery, Activity, Settings, and System, plus standard
+folder and drive shortcuts. Drive bars show storage capacity, not a security score.
+
+## Browse the computer
+
+1. Select a personal folder or drive in This PC or the sidebar.
+2. Double-click a folder to enter it. Files show name, modified time, type and size.
+3. Select a file to view its information in the Details pane.
+4. Use Back, Forward or Up; Ctrl+L focuses the location field. Enter a full local
+   folder path and press Enter. Ctrl+F focuses the filename filter.
+5. Choose Details or Icons. Hidden items can be included with the checkbox.
+6. Select a file/folder and choose Scan selected, Preserve folder, or Saved versions;
+   the same actions are available in the list's right-click menu.
+
+Search filters loaded names in the current folder. A folder listing is capped at
+5,000 entries and displays when truncated. Browsing reads metadata; file content
+is not opened or executed. Linked/network locations are not traversed in this preview.
+The System section displays local computer/Windows/component information.
 
 ## Understand the first release
 
@@ -15,7 +30,7 @@ and its observation stops. Keep an additional separately protected backup.
 ## First use
 
 1. Install/open the app using the installation guide.
-2. Review Overview for scanner availability and observation status.
+2. Review System for scanner availability and observation status.
 3. In Settings, add a disposable folder containing a few test documents.
 4. Capture a baseline and review saved/skipped/failed results.
 5. Change or delete a test file and restore a previously captured version to a

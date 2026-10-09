@@ -17,9 +17,11 @@ the roadmap, not under released functionality.
 - Self-contained Windows x64 executable and installation package.
 - Automated recovery simulations and Windows CI.
 - Post-change observation of selected folders while the desktop app is open.
-- 31 core validation scenarios plus native desktop and installer smoke tests.
-- Windows control-center UI with native computer, drive, USB, folder, scan,
-  recovery, activity, and settings icons; real storage bars and component panels.
+- 44 core validation scenarios plus native desktop and installer smoke tests.
+- Explorer-style This PC with personal folders/drives, local directory browsing,
+  native Windows file-type icons, Details/Icons views, location/back/forward/up,
+  filename filtering, hidden items and selected-file details.
+- Browser scan/preserve/recovery actions and actual System information.
 - Searchable recovery/activity lists, keyboard-focus states, compact-window
   rendering, and original executable/window/installer icon artwork.
 

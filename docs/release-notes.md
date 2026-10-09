@@ -3,8 +3,10 @@
 Native Windows x64 app with drive inventory, selected-path Microsoft Defender
 scan requests, local protected-folder versions, integrity-verified restore-as-copy,
 persisted settings, and activity history.
-The redesigned Windows workspace includes computer/disk/USB icons, real drive
-capacity bars, component status cards, and searchable recovery/activity lists.
+The Windows filesystem workspace opens to This PC with real folders/drives,
+native file-type icons, local browsing, Details/Icons views, location/history,
+filename filtering and file details. System shows local computer/component facts.
+Recovery/activity lists remain searchable. Linked/network browsing is not supported.
 
 Observation runs only while the desktop app is open and occurs after changes.
 This release does not block USB devices, intercept writes, contain ransomware,

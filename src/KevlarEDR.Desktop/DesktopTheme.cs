@@ -93,16 +93,16 @@ internal static class DesktopTheme
             </ControlTemplate></Setter.Value></Setter>
           </Style>
           <Style x:Key="NavigationItem" TargetType="ListBoxItem">
-            <Setter Property="Foreground" Value="#B6C4D8"/><Setter Property="Padding" Value="14,13"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Margin" Value="0,3"/>
+            <Setter Property="Foreground" Value="#34445C"/><Setter Property="Padding" Value="12,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Margin" Value="0,1"/>
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
               <Border x:Name="Surface" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent">
                 <ContentPresenter/>
               </Border>
               <ControlTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#1D304B"/></Trigger>
-                <Trigger Property="IsSelected" Value="True"><Setter TargetName="Surface" Property="Background" Value="#23416A"/><Setter Property="Foreground" Value="White"/></Trigger>
-                <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#70ABFF"/></Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#EEF1F5"/></Trigger>
+                <Trigger Property="IsSelected" Value="True"><Setter TargetName="Surface" Property="Background" Value="#E3EDFB"/><Setter Property="Foreground" Value="#185ABA"/></Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#1769E0"/></Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
           </Style>

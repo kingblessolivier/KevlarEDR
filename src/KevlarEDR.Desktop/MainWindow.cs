@@ -18,14 +18,18 @@ public sealed class MainWindow : Window
     private readonly StackPanel page = new() { Margin = new Thickness(30, 26, 30, 20) };
     private readonly TextBlock status = new() { Margin = new Thickness(10, 0, 0, 0), TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = Muted };
     private readonly ListBox navigation = new() { BorderThickness = new Thickness(0), Padding = new Thickness(0), Background = Brushes.Transparent };
+    private readonly ScrollViewer pageScroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+    private readonly FileWorkspace files;
+    private string? recoveryQuery;
     private VaultState state = new();
     private bool busy;
     private bool closing;
-    private readonly string[] pages = ["Overview", "Scans", "Devices", "Recovery", "Activity", "Settings"];
-    private readonly string[] pageIcons = [Computer, Search, Drive, Restore, History, DesktopTheme.Settings];
-    private readonly string[] descriptions = ["Your computer, storage, and recovery at a glance.", "Scan files and folders with Microsoft Defender.",
-        "Explore the storage connected to this computer.", "Find a saved version and restore a verified copy.", "Review captures, scans, and recovery operations.", "Manage observed folders and local version storage."];
+    private readonly string[] pages = ["This PC", "Scans", "Devices", "Recovery", "Activity", "Settings", "System"];
+    private readonly string[] pageIcons = [Computer, Search, Drive, Restore, History, DesktopTheme.Settings, Computer];
+    private readonly string[] descriptions = ["Browse your computer.", "Scan files and folders with Microsoft Defender.",
+        "Explore the storage connected to this computer.", "Find a saved version and restore a verified copy.", "Review captures, scans, and recovery operations.", "Manage observed folders and local version storage.", "Computer information and local protection components."];
     public string? SmokeFailure { get; set; }
+    public Task Initialization { get; private set; } = Task.CompletedTask;
     public MainWindow(string root)
     {
         vault = new(root); observer = new(vault);
@@ -34,24 +38,30 @@ public sealed class MainWindow : Window
         FontFamily = new FontFamily("Segoe UI"); FontSize = 14;
         Foreground = Ink; Background = DesktopTheme.Color("#F3F6FB");
         Resources = DesktopTheme.Resources(); UseLayoutRounding = true; SnapsToDevicePixels = true;
+        files = new(path => RunAsync(() => ScanAsync(path)), path => RunAsync(() => PreserveBrowserFolderAsync(path)), path => RunAsync(() =>
+        { recoveryQuery = path; navigation.SelectedIndex = 3; return Task.CompletedTask; }));
+        files.LocationChanged += location => Title = "KevlarEDR — " + (location is null ? "This PC" : Path.GetFileName(location.TrimEnd('\\')));
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Icon = CreateWindowIcon();
-        var shell = new DockPanel { Background = Background }; var rail = new DockPanel { Margin = new Thickness(18, 26, 18, 20) };
-        var brand = new StackPanel { Margin = new Thickness(6, 0, 0, 30) };
+        var shell = new DockPanel { Background = Background }; var rail = new DockPanel { Margin = new Thickness(12, 18, 12, 14) };
+        var brand = new StackPanel { Margin = new Thickness(6, 0, 0, 20) };
         var brandRow = new StackPanel { Orientation = Orientation.Horizontal };
-        brandRow.Children.Add(new Image { Source = Icon, Width = 32, Height = 32 });
-        brandRow.Children.Add(new TextBlock { Text = "KevlarEDR", FontSize = 23, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White, Margin = new Thickness(10, 0, 0, 0) });
-        brand.Children.Add(brandRow); brand.Children.Add(Text("ENDPOINT WORKSPACE", 10, color: DesktopTheme.Color("#8599B5")));
+        brandRow.Children.Add(new Image { Source = Icon, Width = 24, Height = 24 });
+        brandRow.Children.Add(new TextBlock { Text = "KevlarEDR", FontSize = 18, FontWeight = FontWeights.SemiBold, Foreground = Ink, Margin = new Thickness(10, 0, 0, 0) });
+        brand.Children.Add(brandRow);
         DockPanel.SetDock(brand, Dock.Top); rail.Children.Add(brand);
         var railFooter = new StackPanel { Margin = new Thickness(6, 20, 6, 0) };
-        railFooter.Children.Add(new Border { Height = 1, Background = DesktopTheme.Color("#2A3C56"), Margin = new Thickness(0, 0, 0, 18) });
-        railFooter.Children.Add(Text("LOCAL EDITION", 10, true, DesktopTheme.Color("#8599B5")));
-        railFooter.Children.Add(Text("One computer", 14, true, Brushes.White));
-        railFooter.Children.Add(Text("Company management is planned.", 12, color: DesktopTheme.Color("#9AACBF")));
+        railFooter.Children.Add(new Border { Height = 1, Background = Line, Margin = new Thickness(0, 0, 0, 12) });
+        railFooter.Children.Add(Text(Environment.MachineName, 12, true));
+        railFooter.Children.Add(Text("Local preview • v0.1", 11, color: Muted));
         DockPanel.SetDock(railFooter, Dock.Bottom); rail.Children.Add(railFooter);
-        var navigationArea = new StackPanel(); navigationArea.Children.Add(Text("WORKSPACE", 10, true, DesktopTheme.Color("#8599B5")));
-        navigationArea.Children.Add(navigation); rail.Children.Add(navigationArea);
-        var navBorder = new Border { Width = 228, Child = rail, Background = DesktopTheme.Color("#122238") };
+        var navigationArea = new StackPanel(); navigationArea.Children.Add(navigation);
+        var shortcuts = new StackPanel { Margin = new Thickness(8, 18, 0, 0) }; shortcuts.Children.Add(Text("Quick access", 12, true, Muted));
+        foreach (var (label, path) in FileWorkspace.PersonalFolders()) shortcuts.Children.Add(LocationShortcut(label, path, Folder));
+        shortcuts.Children.Add(new Border { Height = 12 }); shortcuts.Children.Add(Text("Drives", 12, true, Muted));
+        foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType != DriveType.Network)) shortcuts.Children.Add(LocationShortcut(drive.Name.TrimEnd('\\'), drive.Name, drive.DriveType == DriveType.Removable ? Usb : Drive));
+        navigationArea.Children.Add(shortcuts); rail.Children.Add(new ScrollViewer { Content = navigationArea, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        var navBorder = new Border { Width = 208, Child = rail, Background = DesktopTheme.Color("#F7F8FA"), BorderBrush = Line, BorderThickness = new Thickness(0, 0, 1, 0) };
         DockPanel.SetDock(navBorder, Dock.Left); shell.Children.Add(navBorder);
         for (int i = 0; i < pages.Length; i++)
         {
@@ -75,16 +85,35 @@ public sealed class MainWindow : Window
         statusLine.Children.Add(DesktopTheme.Icon(History, 16, Muted)); Grid.SetColumn(status, 1); statusLine.Children.Add(status);
         var footer = new Border { Child = statusLine, Background = Brushes.White, Padding = new Thickness(24, 10, 24, 10), BorderBrush = Line, BorderThickness = new Thickness(0, 1, 0, 0) };
         DockPanel.SetDock(footer, Dock.Bottom); workspace.Children.Add(footer);
-        workspace.Children.Add(new ScrollViewer { Content = page, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        pageScroll.Content = page; pageScroll.SizeChanged += (_, e) => files.Height = Math.Max(300, e.NewSize.Height);
+        workspace.Children.Add(pageScroll);
         shell.Children.Add(workspace);
         Content = shell; navigation.SelectedIndex = 0;
         observer.HealthChanged += message => Dispatcher.BeginInvoke(() => { if (!closing && !busy) status.Text = message; });
-        Loaded += async (_, _) => await RunAsync(async () =>
+        Loaded += async (_, _) =>
         {
-            await ReloadAsync(); observer.Configure(state.ProtectedFolders);
-            status.Text = "Prototype: monitoring runs only while this app is open. " + observer.Health;
-        });
-        Closing += (_, _) => { closing = true; observer.DisposeAsync().AsTask().GetAwaiter().GetResult(); };
+            Initialization = RunAsync(async () =>
+            {
+                await ReloadAsync(); observer.Configure(state.ProtectedFolders);
+                await files.NavigateAsync(null, false);
+                status.Text = "Prototype: monitoring runs only while this app is open. " + observer.Health;
+            });
+            await Initialization;
+        };
+        Closing += (_, _) => { closing = true; files.Dispose(); observer.DisposeAsync().AsTask().GetAwaiter().GetResult(); };
+    }
+    private Button LocationShortcut(string label, string path, string glyph)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal }; var icon = DesktopTheme.Icon(glyph, 16, glyph == Folder ? DesktopTheme.Color("#B58A10") : Muted); icon.Margin = new Thickness(0, 0, 10, 0); row.Children.Add(icon);
+        row.Children.Add(new TextBlock { Text = label, FontSize = 12, VerticalAlignment = VerticalAlignment.Center });
+        var button = new Button { Content = row, HorizontalContentAlignment = HorizontalAlignment.Left, Background = Brushes.Transparent, BorderBrush = Brushes.Transparent, Padding = new Thickness(6, 7, 6, 7), MinHeight = 30, ToolTip = path };
+        Accessible(button, "Browse " + label); button.Click += async (_, _) => { navigation.SelectedIndex = 0; await files.NavigateAsync(path); }; return button;
+    }
+    private async Task PreserveBrowserFolderAsync(string folder)
+    {
+        await vault.AddFolderAsync(folder); state = await vault.ReadAsync(); observer.Configure(state.ProtectedFolders);
+        var result = await Task.Run(() => vault.CaptureFolderAsync(folder));
+        status.Text = $"Baseline: {result.Saved} saved, {result.Unchanged} unchanged, {result.Failed} failed.";
     }
     private static DrawingImage CreateWindowIcon()
     {
@@ -126,14 +155,21 @@ public sealed class MainWindow : Window
     {
         if (navigation.SelectedIndex < 0) return;
         page.Children.Clear(); string selected = pages[navigation.SelectedIndex];
+        if (selected == "This PC")
+        {
+            page.Margin = new Thickness(0); pageScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            files.Height = Math.Max(300, pageScroll.ActualHeight > 0 ? pageScroll.ActualHeight : 690);
+            page.Children.Add(files); return;
+        }
+        page.Margin = new Thickness(30, 26, 30, 20); pageScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
         var heading = new DockPanel();
         var refresh = Button("Refresh", async () => { await ReloadAsync(); status.Text = observer.Health; }, glyph: Refresh);
         refresh.Margin = new Thickness(12, 0, 0, 0); refresh.VerticalAlignment = VerticalAlignment.Top; DockPanel.SetDock(refresh, Dock.Right); heading.Children.Add(refresh);
-        var titles = new StackPanel(); titles.Children.Add(Text(selected == "Overview" ? "Computer overview" : selected, 28, true));
+        var titles = new StackPanel(); titles.Children.Add(Text(selected, 28, true));
         titles.Children.Add(Text(descriptions[navigation.SelectedIndex], 13, color: Muted)); heading.Children.Add(titles); heading.Margin = new Thickness(0, 0, 0, 18); page.Children.Add(heading);
         switch (selected)
         {
-            case "Overview": Overview(); break;
+            case "System": Overview(); break;
             case "Scans": Scans(); break;
             case "Devices": Devices(); break;
             case "Recovery": Recovery(); break;
@@ -173,6 +209,9 @@ public sealed class MainWindow : Window
         foreach (var item in state.Activity.Take(3)) recent.Children.Add(EventRow(item));
         if (state.Activity.Count == 0) recent.Children.Add(Text("No activity yet. Add a folder or request your first scan.", 13, color: Muted));
         page.Children.Add(Card(recent));
+        var system = Label(Computer, "System information", "Reported by this Windows computer");
+        system.Children.Add(Text($"Operating system: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\nArchitecture: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}\nLogical processors: {Environment.ProcessorCount}\nUser/domain label: {Environment.UserDomainName}\\{Environment.UserName}\nSystem uptime: {TimeSpan.FromMilliseconds(Environment.TickCount64):d\\.hh\\:mm\\:ss}", 13, color: Muted));
+        system.Children.Add(Text("Company computers and remote management will appear after authenticated enrollment is implemented.", 12, color: Muted)); page.Children.Add(Card(system));
     }
     private static void AddMetric(Grid grid, int column, string glyph, string value, string label, string detail)
     {
@@ -292,7 +331,7 @@ public sealed class MainWindow : Window
                 var item = new ListBoxItem { Content = row, Tag = new VersionChoice(version) }; Accessible(item, new VersionChoice(version).ToString()); list.Items.Add(item);
             }
         }
-        filter.TextChanged += (_, _) => Populate(); Populate();
+        filter.TextChanged += (_, _) => Populate(); filter.Text = recoveryQuery ?? ""; recoveryQuery = null; Populate();
         workspace.Children.Add(list);
         if (state.Versions.Count == 0) workspace.Children.Add(Text("No saved versions. Add a folder in Settings to capture a baseline.", 13, color: Muted));
         workspace.Children.Add(Button("Restore selected version as a copy", async () =>
@@ -356,6 +395,7 @@ public sealed class MainWindow : Window
     }
     public async Task SmokeAsync(string reportPath)
     {
+        await Initialization;
         if (SmokeFailure is not null) throw new InvalidOperationException(SmokeFailure);
         string fixtures = vault.Root + "-fixtures";
         Directory.CreateDirectory(fixtures);
@@ -381,7 +421,7 @@ public sealed class MainWindow : Window
         for (int i = 0; i < pages.Length; i++)
         {
             navigation.SelectedIndex = i; UpdateLayout();
-            if (page.Children.Count < 2) throw new InvalidOperationException("Page failed to render: " + pages[i]);
+            if (page.Children.Count < (i == 0 ? 1 : 2)) throw new InvalidOperationException("Page failed to render: " + pages[i]);
             SaveScreenshot(Path.Combine(Path.GetDirectoryName(reportPath)!, Path.GetFileNameWithoutExtension(reportPath) + "-" + pages[i].ToLowerInvariant() + ".png"));
             rendered.Add(pages[i]);
         }
@@ -398,6 +438,27 @@ public sealed class MainWindow : Window
         var activityFilter = Descendants<TextBox>(page).Single();
         activityFilter.Text = "definitely-not-an-event";
         if (Descendants<ListBox>(page).Single().Items.Count != 0) throw new InvalidOperationException("Activity search did not filter events.");
+        string browserRoot = vault.Root + "-browse"; Directory.CreateDirectory(browserRoot);
+        string child = Path.Combine(browserRoot, "Reports"); Directory.CreateDirectory(child);
+        string notes = Path.Combine(browserRoot, "meeting-notes.txt"); await File.WriteAllTextAsync(notes, "Harmless Explorer browsing fixture.");
+        await File.WriteAllTextAsync(Path.Combine(browserRoot, "inventory.csv"), "item,count\nTest document,1");
+        await File.WriteAllTextAsync(Path.Combine(child, "summary.txt"), "Harmless subfolder fixture.");
+        navigation.SelectedIndex = 0; UpdateLayout();
+        if (!await files.NavigateAsync(browserRoot) || files.VisibleItems != 3 || !files.HasShellIcons) throw new InvalidOperationException("File browser or native file icons failed.");
+        files.SetFilter("meeting");
+        if (files.VisibleItems != 1 || !files.SelectByName("meeting-notes.txt") || !files.CanScanSelection) throw new InvalidOperationException("File search/selection actions failed.");
+        files.SetFilter(""); files.SelectByName("meeting-notes.txt"); UpdateLayout();
+        SaveScreenshot(Path.Combine(Path.GetDirectoryName(reportPath)!, Path.GetFileNameWithoutExtension(reportPath) + "-files.png"));
+        files.SetView(true); UpdateLayout();
+        SaveScreenshot(Path.Combine(Path.GetDirectoryName(reportPath)!, Path.GetFileNameWithoutExtension(reportPath) + "-file-icons.png"));
+        files.SetView(false);
+        if (!await files.NavigateAsync(child)) throw new InvalidOperationException("Folder navigation failed.");
+        await files.BackAsync(); if (files.CurrentLocation != browserRoot) throw new InvalidOperationException("Back navigation failed.");
+        await files.ForwardAsync(); if (files.CurrentLocation != child) throw new InvalidOperationException("Forward navigation failed.");
+        await files.UpAsync(); if (files.CurrentLocation != browserRoot) throw new InvalidOperationException("Up navigation failed.");
+        if (await files.NavigateAsync(Path.Combine(browserRoot, "does-not-exist")) || files.CurrentLocation != browserRoot) throw new InvalidOperationException("Failed navigation changed the current folder.");
+        if (await File.ReadAllTextAsync(notes) != "Harmless Explorer browsing fixture.") throw new InvalidOperationException("Browsing modified a file.");
+        await files.NavigateAsync(null); UpdateLayout();
         navigation.SelectedIndex = 0; UpdateLayout();
         SaveScreenshot(Path.ChangeExtension(reportPath, ".png"));
         Width = MinWidth; Height = MinHeight; UpdateLayout();
@@ -406,6 +467,7 @@ public sealed class MainWindow : Window
             RenderedPages = rendered, ScannerFound = scanner.Executable is not null, BaselineCaptured = baseline.Saved,
             DeletedFileRestored = restored, NativeIconGlyphsVerified = DesktopTheme.Glyphs.Length,
             RecoverySearchPassed = true, ActivitySearchPassed = true, CompactLayoutRendered = true,
+            FileBrowsingPassed = true, ShellFileIconsPassed = true, FolderHistoryPassed = true,
             Version = "0.1.0" }, new JsonSerializerOptions { WriteIndented = true }));
     }
     private static IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject

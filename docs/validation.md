@@ -7,28 +7,36 @@ Date: 2026-10-09. Local environment: Windows 11 Pro x64, build 26200;
 
 `dotnet build KevlarEDR.slnx -c Release`: succeeded with zero warnings/errors.
 
-`dotnet run --project tests/KevlarEDR.Validation -c Release`: 31 scenarios passed.
+`dotnet run --project tests/KevlarEDR.Validation -c Release`: 44 scenarios passed.
 Scenarios cover overwrite/delete and byte-for-byte recovery, destination collisions,
 metadata reopening, same-size blob corruption, full vault, file/record limits,
 locked files, concurrent capture, separate-process locking/cancellation, observer
 capture and removed-folder events, linked paths, malformed/unsupported metadata,
 binary streaming, missing scan targets, and persistent failed-scan status.
+Browser cases cover directories first, non-recursive listing, hidden-item handling,
+real file size, unchanged source content, bounded/truncated listings, missing folders,
+local-path validation, cancellation, and linked-location identification/rejection.
 
 Real Defender adapter smoke against a harmless text fixture: exit 0; provider
 reported no threats. This establishes scan integration for that fixture, not
 malware-detection coverage or a guarantee about other files.
 
-Published executable native smoke: window opened; Overview, Scans, Devices,
-Recovery, Activity, and Settings rendered. The real desktop process captured a
+Published executable native smoke: window opened; This PC, Scans, Devices,
+Recovery, Activity, Settings and System rendered. The real desktop process captured a
 baseline, changed/deleted its disposable document, and restored its original.
 The redesigned UI smoke also verifies 14 installed Windows icon glyphs, recovery
 and activity search filters, saved-version selection identity, and minimum-window
-rendering. Screenshots of the six pages were visually inspected; no missing glyphs
+rendering. Explorer checks include actual file-type icons, file metadata/filtering,
+Details/Icons views, back/forward/up navigation, retained location after failed
+navigation, and unchanged source content. Screenshots were visually inspected; no missing glyphs
 or overlapping main controls were observed.
 
 Installer: per-user setup succeeded in a disposable installation directory;
 installed executable passed the same native recovery smoke. Uninstaller removed
 the app while leaving a deliberately created recovery-data marker intact.
+The filesystem UI update was also applied to the default per-user installation:
+the installed binary matches the published build, the seven-section/browser/recovery
+smoke passes, and existing recovery metadata plus a retention marker remain intact.
 
 ## Repeatable commands
 
@@ -39,6 +47,8 @@ dotnet run --project tests/KevlarEDR.Validation -c Release -- --scan-smoke artif
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
 # Run this only on a clean test account/VM without an existing installation.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-install.ps1
+# Apply/test a build on the default per-user installation (closes KevlarEDR windows).
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-update.ps1
 ```
 
 Local evidence stays under ignored `artifacts/`. CI is configured to upload

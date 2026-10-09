@@ -3,16 +3,18 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $outputRoot = Join-Path $projectRoot 'artifacts'
 $publishRoot = Join-Path $outputRoot 'publish'
+$buildRoot = Join-Path $outputRoot 'package-build'
 New-Item -ItemType Directory -Path $publishRoot -Force | Out-Null
 Push-Location $projectRoot
 try {
-    dotnet build KevlarEDR.slnx -c Release --nologo
+    # Keep package builds separate from development executables a user may have open.
+    dotnet build KevlarEDR.slnx -c Release --artifacts-path $buildRoot --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     if (-not $SkipValidation) {
-        dotnet run --project tests/KevlarEDR.Validation -c Release --no-build
+        dotnet run --project tests/KevlarEDR.Validation -c Release --artifacts-path $buildRoot --no-build
         if ($LASTEXITCODE -ne 0) { throw 'Recovery validation failed.' }
     }
-    dotnet publish src/KevlarEDR.Desktop -c Release -r win-x64 --self-contained true -o $publishRoot --nologo
+    dotnet publish src/KevlarEDR.Desktop -c Release -r win-x64 --self-contained true --artifacts-path $buildRoot -o $publishRoot --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'src\KevlarEDR.Desktop\Assets\KevlarEDR.ico') -Destination $publishRoot
     # Remove two obsolete generated guide copies from an earlier package layout.

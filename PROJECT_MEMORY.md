@@ -21,23 +21,34 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
   and task tracking while away.
 - User rejected the plain initial UI and requested a polished OS-style interface
   with computer icons. Use native Windows icon navigation and real computer/drive cards.
+- User clarified that OS-style means viewing the actual filesystem and computer
+  sections, like File Explorer. The app should start with This PC, real drives and
+  personal folders, directory browsing, location/history, file icons and system information.
 
 ## Current state
 
 - Implemented the 0.1 local desktop prototype in C#/.NET 10/WPF.
 - Core: content-addressed file versions, checked restore-as-copy, persisted
   settings/activity/scan outcome, file-change observation, and Defender adapter.
-- Six real desktop pages: Overview, Scans, Devices, Recovery, Activity, Settings.
-- Redesigned all six pages: navy icon navigation, light Windows workspace, native
-  computer/disk/USB/folder icons, drive capacity bars, component cards, and searchable
-  recovery/activity lists. Original artwork supplies window/executable/setup icons.
-- Desktop smoke verifies 14 native glyphs, both search filters, saved-version
-  selection, all six pages, and compact layout; screenshots were visually inspected.
-- Local validation: 31 scenarios passed; harmless real Defender scan completed;
+- Seven desktop sections: This PC, Scans, Devices, Recovery, Activity, Settings, System.
+- Current UI uses a light File Explorer-style navigation pane, real personal-folder
+  shortcuts/drives, a location field, back/forward/up controls, a command bar,
+  Details/Icons views, filename filtering, and a selected-file details pane.
+- Browsing is local, bounded to 5,000 entries per folder, and non-recursive. It
+  reads metadata without executing/opening file contents. Linked and network
+  locations are not traversed. Windows supplies file-type icons by extension.
+- Scan, folder preservation and saved-version actions are available from the browser.
+  The System section shows actual Windows/build/architecture/processor/user/uptime
+  information plus component state. Company computers still require future enrollment.
+- Desktop smoke verifies native glyphs, search/selection, all seven sections,
+  compact layout, file-type icons and successful/failed folder-history navigation.
+- Local validation: 44 scenarios passed; harmless real Defender scan completed;
   desktop pages/recovery smoke and installer/uninstaller retention tests passed.
 - The redesigned setup and portable packages were rebuilt and verified. The app
   is installed per user in LocalAppData/Programs/KevlarEDR; its executable hash
   matches the tested published build. Uninstallation leaves recovery data intact.
+- The Explorer-style update passed installed seven-section/browser/recovery smoke
+  and preserved existing recovery metadata during the per-user update.
 - No privileged service, driver, USB blocking, malware containment, or remote
   management is implemented. Version capture occurs after changes, while UI is open.
 - Analysis/design documents and an implementation roadmap have now been written.

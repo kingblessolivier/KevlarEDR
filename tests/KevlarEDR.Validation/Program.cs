@@ -119,6 +119,8 @@ try
         }
         await MustFail(() => vault.AddFolderAsync(link), "Reparse-point source rejected");
         await MustFail(() => vault.RestoreAsync(second!.Id, link), "Reparse-point destination rejected");
+        await MustFail(() => new LocalFileBrowser().ReadAsync(link), "Browser does not traverse linked locations");
+        Assert((await new LocalFileBrowser().ReadAsync(fixtureRoot)).Entries.Any(e => e.FullPath == link && e.IsLink), "Browser identifies a linked folder without traversing it");
         Directory.Delete(link);
     }
     string invalidRoot = Path.Combine(fixtureRoot, "invalid"); Directory.CreateDirectory(invalidRoot);
@@ -135,6 +137,29 @@ try
     Assert((await File.ReadAllBytesAsync(await vault.RestoreAsync(binaryVersion.Id, restored))).SequenceEqual(binaryBytes), "Binary streaming recovery preserves every byte");
     await vault.StoreScanAsync(source, new("Failed or requires action", 2, "Synthetic provider error: scan not completed", DateTimeOffset.UtcNow));
     Assert((await new VersionVault(vault.Root).ReadAsync()).LastScan?.Status == "Failed or requires action", "Failed scan status survives restart without becoming clean");
+    string browseRoot = Path.Combine(fixtureRoot, "browse"); Directory.CreateDirectory(browseRoot);
+    string browseChild = Path.Combine(browseRoot, "Reports"); Directory.CreateDirectory(browseChild);
+    await File.WriteAllTextAsync(Path.Combine(browseChild, "nested.txt"), "Nested content");
+    string browseFile = Path.Combine(browseRoot, "notes.txt"); await File.WriteAllTextAsync(browseFile, "Read-only browsing fixture");
+    string browseHidden = Path.Combine(browseRoot, "hidden.txt"); await File.WriteAllTextAsync(browseHidden, "Hidden fixture"); File.SetAttributes(browseHidden, FileAttributes.Hidden);
+    var fileBrowser = new LocalFileBrowser(); var directory = await fileBrowser.ReadAsync(browseRoot);
+    Assert(directory.Entries.First().IsDirectory, "Browser lists folders before files");
+    Assert(!directory.Entries.Any(e => e.Name == "nested.txt"), "Browser does not recursively enumerate folder contents");
+    Assert(!directory.Entries.Any(e => e.Name == "hidden.txt"), "Browser hides hidden items by default");
+    Assert((await fileBrowser.ReadAsync(browseRoot, true)).Entries.Any(e => e.Name == "hidden.txt"), "Hidden-items option includes hidden files");
+    Assert(directory.Entries.Single(e => e.Name == "notes.txt").Size == new FileInfo(browseFile).Length, "Browser reports actual file size");
+    Assert(await File.ReadAllTextAsync(browseFile) == "Read-only browsing fixture", "Browsing leaves source content unchanged");
+    var bounded = await new LocalFileBrowser(1).ReadAsync(browseRoot);
+    Assert(bounded.Entries.Count == 1 && bounded.Truncated, "Large directory limit is explicit and bounded");
+    await MustFail(() => fileBrowser.ReadAsync(Path.Combine(browseRoot, "missing")), "Missing browse folder fails explicitly");
+    await MustFail(() => fileBrowser.ReadAsync(@"\\example.invalid\share"), "UNC browsing rejected without a network connection");
+    await MustFail(() => fileBrowser.ReadAsync("relative-folder"), "Ambiguous relative browse path rejected");
+    using (var cancelledBrowse = new CancellationTokenSource())
+    {
+        cancelledBrowse.Cancel(); bool cancelled = false;
+        try { await fileBrowser.ReadAsync(browseRoot, cancellation: cancelledBrowse.Token); } catch (OperationCanceledException) { cancelled = true; }
+        Assert(cancelled, "Browser enumeration honors cancellation");
+    }
     if (args.Length == 2 && args[0] == "--scan-smoke")
     {
         string scanFixture = Path.Combine(fixtureRoot, "scan-fixture"); Directory.CreateDirectory(scanFixture);

@@ -1,5 +1,17 @@
 # Architecture and component design
 
+## Local filesystem workspace
+
+The desktop's This PC workspace reads bounded, non-recursive metadata through
+`LocalFileBrowser`. It keeps navigation/history/filter/view state in memory;
+directory listings are not persisted in recovery metadata. Local fully qualified
+paths are required; linked/network paths are not traversed. Listings and file-type
+icon acquisition run off the UI thread with cancellation/stale-result checks.
+Windows Shell icons are requested by extension with synthetic attributes rather
+than loading icons/previews from user-file content. Native icon handles are released.
+The browser delegates scanning, version preservation and recovery to existing
+application operations; it does not implement shell file editing/execution.
+
 ## Initial architecture
 
 ```mermaid
