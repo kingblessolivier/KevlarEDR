@@ -14,8 +14,10 @@ and validation evidence for the exact tested environment.
 
 ## Setup package
 
-1. Obtain `KevlarEDR-Setup-0.1.0-win-x64.exe` and its checksums from the
-   [release page](https://github.com/kingblessolivier/KevlarEDR/releases).
+1. Obtain `KevlarEDR-Setup-0.1.0-win-x64.exe` and `SHA256SUMS.txt` from your
+   local build's `artifacts` folder. Tagged releases will later provide these on the
+   [release page](https://github.com/kingblessolivier/KevlarEDR/releases);
+   hosted CI/merge are currently pending the GitHub account billing issue.
 2. Compare SHA-256 using `Get-FileHash -Algorithm SHA256 <package-path>`.
 3. Check release notes for unsigned prototype status. Do not disable antivirus,
    firewall, or other protections to install it.

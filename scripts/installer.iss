@@ -23,6 +23,7 @@ OutputBaseFilename=KevlarEDR-Setup-0.1.0-win-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile={#SourceDir}\KevlarEDR.ico
 UninstallDisplayIcon={app}\KevlarEDR.exe
 CloseApplications=yes
 RestartApplications=no

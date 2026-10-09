@@ -30,7 +30,7 @@ jobs:
             artifacts/*.zip
             artifacts/SHA256SUMS.txt
             artifacts/desktop-smoke.json
-            artifacts/desktop-smoke.png
+            artifacts/desktop-smoke*.png
             artifacts/installed-desktop-smoke.json
             artifacts/installer-validation.json
           if-no-files-found: error

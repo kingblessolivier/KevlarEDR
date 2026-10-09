@@ -14,6 +14,12 @@ try {
     }
     dotnet publish src/KevlarEDR.Desktop -c Release -r win-x64 --self-contained true -o $publishRoot --nologo
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'src\KevlarEDR.Desktop\Assets\KevlarEDR.ico') -Destination $publishRoot
+    # Remove two obsolete generated guide copies from an earlier package layout.
+    foreach ($obsoleteGuide in @('installation.md','user-guide.md')) {
+        $obsoletePath = Join-Path $publishRoot $obsoleteGuide
+        if (Test-Path -LiteralPath $obsoletePath) { Remove-Item -LiteralPath $obsoletePath }
+    }
     foreach ($documentName in @('README.md','CONTRIBUTING.md','CHANGELOG.md','SECURITY.md','THIRD_PARTY_NOTICES.md')) {
         Copy-Item -LiteralPath (Join-Path $projectRoot $documentName) -Destination $publishRoot
     }
@@ -30,7 +36,18 @@ try {
     if (-not $smokeProcess.WaitForExit(45000)) { $smokeProcess.Kill(); throw 'Desktop smoke test timed out.' }
     if ($smokeProcess.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $smokePath)) { throw 'Desktop smoke test failed.' }
     $archivePath = Join-Path $outputRoot 'KevlarEDR-0.1.0-win-x64-portable.zip'
-    Compress-Archive -Path (Join-Path $publishRoot '*') -DestinationPath $archivePath -Force
+    # Windows can briefly retain a just-executed binary during a scanner inspection.
+    # Retry packaging without changing security settings or terminating scanners.
+    for ($archiveAttempt = 1; $archiveAttempt -le 4; $archiveAttempt++) {
+        try {
+            Compress-Archive -Path (Join-Path $publishRoot '*') -DestinationPath $archivePath -Force -ErrorAction Stop
+            break
+        } catch {
+            if ($archiveAttempt -eq 4) { throw }
+            Write-Warning 'Portable packaging could not read a file; retrying shortly.'
+            Start-Sleep -Seconds (2 * $archiveAttempt)
+        }
+    }
     $compilerCandidates = @(
         (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),

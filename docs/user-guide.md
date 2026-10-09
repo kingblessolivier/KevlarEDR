@@ -1,5 +1,10 @@
 # KevlarEDR user guide
 
+The sidebar provides Overview, Scans, Devices, Recovery, Activity, and Settings.
+Computer, drive, USB, and folder icons identify the matching controls. Drive bars
+show used storage capacity, not a security score. Recovery and Activity include
+search fields; type part of a file path or event to filter the local records.
+
 ## Understand the first release
 
 This app helps request Defender scans and keep versions of selected documents.

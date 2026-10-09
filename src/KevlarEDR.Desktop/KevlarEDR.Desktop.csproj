@@ -12,6 +12,7 @@
     <FileVersion>0.1.0.0</FileVersion>
     <Product>KevlarEDR</Product>
     <Description>Local Windows scanning and recoverable file versions</Description>
+    <ApplicationIcon>Assets/KevlarEDR.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>embedded</DebugType>

@@ -37,9 +37,15 @@ location. The temporary body file does not need to be committed.
 ## Review and merge
 
 Wait for Windows CI, examine the diff, and resolve genuine review findings. Use
-squash merge once the branch is ready and reviewed. Require status checks and PR
-review through repository rules where the GitHub plan permits; until configured,
-this policy is a convention rather than an enforced guarantee.
+squash merge once the branch is ready and reviewed. Main currently enforces PRs,
+the `validate` check against the latest base, resolved conversations, admin
+enforcement, and no force pushes/deletions. Required approving reviews are zero
+for the solo maintainer; increase this when a reviewer joins.
+
+PR #1 is open. Hosted validation cannot start due to GitHub's reported account
+billing lock. Keep the required check enabled, fix account availability, then
+rerun it. Local validation does not make a failed hosted check pass. Do not tag
+or publish a main release before this gate clears.
 
 ```powershell
 gh pr checks <number> --watch

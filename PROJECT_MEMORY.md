@@ -19,6 +19,8 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
   and usage instructions, implementation, simulations, and packaging.
 - User authorized continued autonomous work, required tool installation, testing,
   and task tracking while away.
+- User rejected the plain initial UI and requested a polished OS-style interface
+  with computer icons. Use native Windows icon navigation and real computer/drive cards.
 
 ## Current state
 
@@ -26,17 +28,26 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 - Core: content-addressed file versions, checked restore-as-copy, persisted
   settings/activity/scan outcome, file-change observation, and Defender adapter.
 - Six real desktop pages: Overview, Scans, Devices, Recovery, Activity, Settings.
+- Redesigned all six pages: navy icon navigation, light Windows workspace, native
+  computer/disk/USB/folder icons, drive capacity bars, component cards, and searchable
+  recovery/activity lists. Original artwork supplies window/executable/setup icons.
+- Desktop smoke verifies 14 native glyphs, both search filters, saved-version
+  selection, all six pages, and compact layout; screenshots were visually inspected.
 - Local validation: 31 scenarios passed; harmless real Defender scan completed;
   desktop pages/recovery smoke and installer/uninstaller retention tests passed.
+- The redesigned setup and portable packages were rebuilt and verified. The app
+  is installed per user in LocalAppData/Programs/KevlarEDR; its executable hash
+  matches the tested published build. Uninstallation leaves recovery data intact.
 - No privileged service, driver, USB blocking, malware containment, or remote
   management is implemented. Version capture occurs after changes, while UI is open.
 - Analysis/design documents and an implementation roadmap have now been written.
 - Initial design/docs committed and pushed to `main`; implementation is on
-  `feature/local-desktop-app` and is being prepared for PR/CI/release.
-- A local UI concept was prepared with Windows-sidebar and compact-workspace
-  variants. This is a sample-data design preview, not a functioning security app.
-- Proposed navigation: Overview, Scans, Devices, Recovery, Quarantine, Activity,
-  Settings. User has not selected or approved a final UI design.
+  `feature/local-desktop-app` in PR #1. Main requires `validate` and a PR;
+  force pushes/deletions are disabled. Solo-maintainer approval count is zero.
+- Hosted Windows CI cannot start because GitHub reports an account billing lock.
+  Keep protection intact; merge/tagged release remains pending that external fix.
+- An earlier sample-data HTML concept is superseded by the actual redesigned app.
+- Quarantine navigation is reserved until its underlying feature is implemented.
 
 ## Single-computer feature roadmap
 
@@ -105,7 +116,7 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 
 - C for a minimal Windows filesystem minifilter when kernel enforcement is needed.
 - Rust for the background service and recovery/analysis engine.
-- C#/.NET is a candidate for the local desktop application.
+- C#/.NET 10/WPF is implemented for the local desktop application.
 - Initially consider supported Microsoft Defender scan integration and Windows
   security features rather than claiming a complete new antivirus engine.
 - Keep local business logic separate from UI to support later remote management.

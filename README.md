@@ -17,11 +17,17 @@ later milestones. A local version vault is not an air-gapped backup.
 ## Install and use
 
 See [Installation](docs/installation.md) and [User guide](docs/user-guide.md).
-Packages are published on the [release page](https://github.com/kingblessolivier/KevlarEDR/releases).
+Tagged packages will be published on the [release page](https://github.com/kingblessolivier/KevlarEDR/releases).
+The locally tested prototype is in [PR #1](https://github.com/kingblessolivier/KevlarEDR/pull/1);
+hosted CI and merge are pending a GitHub account billing lock. See the
+[validation evidence](docs/validation.md) for completed local checks.
 Initial target: Windows 11 x64 (locally tested on Pro build 26200).
 Windows x64 packages are produced under `artifacts/` by the packaging script.
 The self-contained application does not require a separate .NET runtime.
 Defender must be installed and available for its scan integration.
+
+The Windows interface includes native computer/drive/USB icons, actual storage
+capacity bars, component status, and searchable recovery and activity workspaces.
 
 ## Develop
 

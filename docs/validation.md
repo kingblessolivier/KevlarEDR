@@ -21,6 +21,10 @@ malware-detection coverage or a guarantee about other files.
 Published executable native smoke: window opened; Overview, Scans, Devices,
 Recovery, Activity, and Settings rendered. The real desktop process captured a
 baseline, changed/deleted its disposable document, and restored its original.
+The redesigned UI smoke also verifies 14 installed Windows icon glyphs, recovery
+and activity search filters, saved-version selection identity, and minimum-window
+rendering. Screenshots of the six pages were visually inspected; no missing glyphs
+or overlapping main controls were observed.
 
 Installer: per-user setup succeeded in a disposable installation directory;
 installed executable passed the same native recovery smoke. Uninstaller removed
@@ -37,8 +41,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-install.ps1
 ```
 
-Local evidence files stay under ignored `artifacts/`; CI uploads sanitized test
-artifacts separately. Do not commit personal paths, scanner logs, or vault data.
+Local evidence stays under ignored `artifacts/`. CI is configured to upload
+disposable-fixture evidence; screenshots include the runner hostname and temporary
+paths. Do not commit personal scanner logs, documents, or vault data.
+
+## Hosted CI status
+
+PR #1's Windows job did not start. GitHub's check reported: "The job was not
+started because your account is locked due to a billing issue."
+This is not a successful CI run. Main's required `validate` check remains enabled;
+merge and tagged publication await restored GitHub Actions availability.
 
 ## Limits of this evidence
 
