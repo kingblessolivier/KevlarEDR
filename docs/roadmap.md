@@ -8,6 +8,7 @@ Each milestone requires demonstrated acceptance evidence before the next release
 
 Deliverables: WPF app; independent core; persisted folder settings and activity;
 Windows drive discovery; selected-path Defender integration; explicit baseline;
+automatic local volume events, user-process tray monitoring and optional sign-in startup;
 best-effort change observation; content-addressed vault; verified restore-as-copy;
 self-contained x64 package; installation/user guide; build/validation CI.
 

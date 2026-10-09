@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KevlarEDR.Core/KevlarEDR.Core.csproj" />
+    <Project Path="src/KevlarEDR.Desktop/KevlarEDR.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KevlarEDR.Validation/KevlarEDR.Validation.csproj" />
+  </Folder>
+</Solution>

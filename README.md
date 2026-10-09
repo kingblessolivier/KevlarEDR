@@ -8,7 +8,8 @@ toward kernel-backed endpoint protection and company management.
 The first release is a **single-computer desktop prototype**, not a replacement
 for Microsoft Defender or a production EDR. It requests scans from Defender,
 discovers Windows drives, preserves versions of selected files, and restores
-verified copies. Filesystem monitoring runs while the desktop app is open.
+verified copies. Device detection and folder observation continue in the Windows notification area.
+Quit stops monitoring; optional per-user sign-in startup is available.
 
 USB blocking, pre-write protection, an always-running privileged service,
 ransomware containment, immutable backups, and remote administration belong to
@@ -17,9 +18,23 @@ later milestones. A local version vault is not an air-gapped backup.
 ## Install and use
 
 See [Installation](docs/installation.md) and [User guide](docs/user-guide.md).
+Tagged packages will be published on the [release page](https://github.com/kingblessolivier/KevlarEDR/releases).
+The locally tested prototype is in [PR #1](https://github.com/kingblessolivier/KevlarEDR/pull/1);
+hosted CI and merge are pending a GitHub account billing lock. See the
+[validation evidence](docs/validation.md) for completed local checks.
+Initial target: Windows 11 x64 (locally tested on Pro build 26200).
 Windows x64 packages are produced under `artifacts/` by the packaging script.
 The self-contained application does not require a separate .NET runtime.
+Setup creates a desktop shortcut and offers sign-in startup. Inserting/removing
+a local drive updates the app automatically and offers an explicit Defender scan.
+Closing the window keeps detection running beside the Windows clock; right-click
+the shield and choose Quit to stop. Settings controls sign-in startup.
 Defender must be installed and available for its scan integration.
+
+The File Explorer-style interface starts with This PC: real drives/personal folders,
+local filesystem browsing, native file-type icons, Details/Icons views, path/history
+navigation, filename filtering, and file information. System shows local computer
+and component details; recovery and activity are searchable.
 
 ## Develop
 
@@ -44,6 +59,7 @@ fixtures and restores to separate destinations.
 - [UI/UX design](docs/ui-design.md)
 - [Detailed roadmap](docs/roadmap.md)
 - [Testing and simulation strategy](docs/testing.md)
+- [Actual validation evidence](docs/validation.md)
 - [Feature → PR → merge workflow](docs/git-workflow.md)
 - [Release and deployment design](docs/release-design.md)
 - [Installation](docs/installation.md) and [User guide](docs/user-guide.md)
