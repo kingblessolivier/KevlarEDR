@@ -33,4 +33,5 @@ jobs:
             artifacts/desktop-smoke*.png
             artifacts/installed-desktop-smoke.json
             artifacts/installer-validation.json
+            artifacts/background-validation.json
           if-no-files-found: error

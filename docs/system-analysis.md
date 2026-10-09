@@ -71,7 +71,7 @@ UC-01: user connects storage → inventory updates → chooses scan → reviews 
 scanner outcome. Device presence is not an automatic declaration of safety.
 
 UC-02: user selects a folder → baseline capture records successes and failures →
-observer captures later readable changes while app remains open.
+observer captures later readable changes while the app process runs, including in the notification area.
 
 UC-03: user loses a document → selects an earlier preserved version → chooses
 another destination → integrity verified → new file created → event recorded.

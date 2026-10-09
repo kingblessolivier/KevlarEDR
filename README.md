@@ -8,7 +8,8 @@ toward kernel-backed endpoint protection and company management.
 The first release is a **single-computer desktop prototype**, not a replacement
 for Microsoft Defender or a production EDR. It requests scans from Defender,
 discovers Windows drives, preserves versions of selected files, and restores
-verified copies. Filesystem monitoring runs while the desktop app is open.
+verified copies. Device detection and folder observation continue in the Windows notification area.
+Quit stops monitoring; optional per-user sign-in startup is available.
 
 USB blocking, pre-write protection, an always-running privileged service,
 ransomware containment, immutable backups, and remote administration belong to
@@ -24,6 +25,10 @@ hosted CI and merge are pending a GitHub account billing lock. See the
 Initial target: Windows 11 x64 (locally tested on Pro build 26200).
 Windows x64 packages are produced under `artifacts/` by the packaging script.
 The self-contained application does not require a separate .NET runtime.
+Setup creates a desktop shortcut and offers sign-in startup. Inserting/removing
+a local drive updates the app automatically and offers an explicit Defender scan.
+Closing the window keeps detection running beside the Windows clock; right-click
+the shield and choose Quit to stop. Settings controls sign-in startup.
 Defender must be installed and available for its scan integration.
 
 The File Explorer-style interface starts with This PC: real drives/personal folders,

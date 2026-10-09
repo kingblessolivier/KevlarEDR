@@ -14,6 +14,23 @@ application operations; it does not implement shell file editing/execution.
 
 ## Initial architecture
 
+`DeviceMonitor` listens for `WM_DEVICECHANGE` on the application's top-level window
+and reconciles local volume metadata off the UI thread, with a three-second fallback
+for missed messages or delayed mounts. `VolumeTracker` establishes a silent baseline
+and deduplicates connection, readiness and removal transitions. The hook never
+dereferences broadcast payloads. A failed inventory preserves the previous baseline
+and reports an error. Network volumes are excluded; new Fixed volumes are included
+because external disks do not always report Removable. This identifies local volumes,
+not trustworthy hardware identities or every USB peripheral.
+
+The per-user desktop process stays alive in the notification area after window close.
+A named per-user/session mutex prevents duplicate observers. Registered window messages
+reopen the existing window or request explicit Quit; they authorize no privileged
+operation. Sign-in startup uses the current user's Windows Run entry and is optional.
+Closing/quit/sign-out semantics are shown in the UI and installation guide. A future
+service remains necessary for machine-wide operation before sign-in and privileged
+device enforcement.
+
 ```mermaid
 flowchart LR
  UI[WPF desktop UI] --> CORE[Local application core]

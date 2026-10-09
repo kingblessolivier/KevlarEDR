@@ -7,8 +7,11 @@ The Windows filesystem workspace opens to This PC with real folders/drives,
 native file-type icons, local browsing, Details/Icons views, location/history,
 filename filtering and file details. System shows local computer/component facts.
 Recovery/activity lists remain searchable. Linked/network browsing is not supported.
+Local volume connections/removals refresh automatically and are recorded in Activity.
+New drive banners offer Open/Scan. Closing hides to the notification area; Start Menu
+and desktop shortcuts reopen one instance. Setup/Settings offer per-user sign-in startup.
 
-Observation runs only while the desktop app is open and occurs after changes.
+Observation occurs after changes while the process runs, including in the notification area; Quit/sign-out stops it.
 This release does not block USB devices, intercept writes, contain ransomware,
 run a Windows service, provide immutable backups, or support remote management.
 Defender scans depend on its installation, permissions, and company policy.

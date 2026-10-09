@@ -217,6 +217,18 @@ internal sealed class FileWorkspace : UserControl, IDisposable
         if (back.Count == 0) return; string? previous = CurrentLocation;
         if (await NavigateAsync(back.Peek(), false)) { back.Pop(); forward.Push(previous); UpdateButtons(); }
     }
+    public async Task VolumesChangedAsync(IReadOnlyList<VolumeChange> changes)
+    {
+        if (CurrentLocation is null) { await NavigateAsync(null, false); return; }
+        if (changes.Any(c => c.Kind is "Removed" or "Unavailable" &&
+            CurrentLocation.StartsWith(c.Volume.Root, StringComparison.OrdinalIgnoreCase)))
+        {
+            // Drop stale actions/history after a volume disappears; do not reuse its drive letter.
+            back.Clear(); forward.Clear();
+            await NavigateAsync(null, false);
+            message.Text = "The drive became unavailable. Returned to This PC.";
+        }
+    }
     public async Task ForwardAsync()
     {
         if (forward.Count == 0) return; string? previous = CurrentLocation;

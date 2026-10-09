@@ -14,6 +14,7 @@ if (-not (Test-Path -LiteralPath $executable)) { throw 'Installed executable mis
 $smokeReport = Join-Path $artifactsRoot 'installed-desktop-smoke.json'
 $app = Start-Process -FilePath $executable -ArgumentList @('--smoke',('"' + $smokeReport + '"')) -WindowStyle Hidden -PassThru
 if (-not $app.WaitForExit(45000) -or $app.ExitCode -ne 0) { throw 'Installed desktop smoke test failed.' }
+& (Join-Path $PSScriptRoot 'test-background.ps1') -Executable $executable
 $dataDirectory = Join-Path $env:LOCALAPPDATA 'KevlarEDR'
 New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
 $marker = Join-Path $dataDirectory ('installer-retention-test-' + [guid]::NewGuid().ToString('N') + '.txt')

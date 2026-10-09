@@ -21,8 +21,10 @@ and validation evidence for the exact tested environment.
 2. Compare SHA-256 using `Get-FileHash -Algorithm SHA256 <package-path>`.
 3. Check release notes for unsigned prototype status. Do not disable antivirus,
    firewall, or other protections to install it.
-4. Run setup, review destination, and finish installation.
-5. Open KevlarEDR from the Start Menu.
+4. Run the **Setup** executable (not the app inside a build folder). Review the
+   destination and the desktop-shortcut/sign-in-startup options, then finish.
+5. Open **KevlarEDR** from the Start Menu or its desktop shield shortcut. The
+   installed executable is `%LOCALAPPDATA%\Programs\KevlarEDR\KevlarEDR.exe`.
 6. Read the prototype limitations, add a disposable test folder, and capture its
    baseline before relying on version history for selected documents.
 
@@ -39,7 +41,10 @@ administrator may run the app with appropriate privileges for an explicit scan;
 ordinary capture/restore does not need elevation. Do not bypass company controls.
 
 If a file cannot be captured, check permissions, file locks, size limits, and
-remaining vault capacity. Best-effort observation ends when the app closes.
+remaining vault capacity. Closing the window keeps the user app running in the notification area.
+Right-click its shield beside the clock and choose **Quit (stop monitoring)** to
+stop detection/observation. Settings can enable/disable startup when you sign in.
+This is a user application, not a privileged service; signing out stops it.
 
 ## Uninstall and data
 

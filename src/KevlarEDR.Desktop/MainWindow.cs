@@ -20,6 +20,12 @@ public sealed class MainWindow : Window
     private readonly ListBox navigation = new() { BorderThickness = new Thickness(0), Padding = new Thickness(0), Background = Brushes.Transparent };
     private readonly ScrollViewer pageScroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
     private readonly FileWorkspace files;
+    private readonly StackPanel driveShortcuts = new();
+    private readonly Border deviceBanner = new() { Visibility = Visibility.Collapsed, Background = DesktopTheme.Color("#EAF3FF"), Padding = new Thickness(24, 12, 24, 12) };
+    private DeviceMonitor? devices;
+    private bool keepRunning, initialized;
+    public event Action<string>? DeviceNotification;
+    public event Action? TrayHidden;
     private string? recoveryQuery;
     private VaultState state = new();
     private bool busy;
@@ -30,8 +36,9 @@ public sealed class MainWindow : Window
         "Explore the storage connected to this computer.", "Find a saved version and restore a verified copy.", "Review captures, scans, and recovery operations.", "Manage observed folders and local version storage.", "Computer information and local protection components."];
     public string? SmokeFailure { get; set; }
     public Task Initialization { get; private set; } = Task.CompletedTask;
-    public MainWindow(string root)
+    public MainWindow(string root, bool detectDevices = true)
     {
+        keepRunning = detectDevices;
         vault = new(root); observer = new(vault);
         Title = "KevlarEDR — This computer";
         Width = 1240; Height = 860; MinWidth = 940; MinHeight = 640;
@@ -59,7 +66,7 @@ public sealed class MainWindow : Window
         var shortcuts = new StackPanel { Margin = new Thickness(8, 18, 0, 0) }; shortcuts.Children.Add(Text("Quick access", 12, true, Muted));
         foreach (var (label, path) in FileWorkspace.PersonalFolders()) shortcuts.Children.Add(LocationShortcut(label, path, Folder));
         shortcuts.Children.Add(new Border { Height = 12 }); shortcuts.Children.Add(Text("Drives", 12, true, Muted));
-        foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType != DriveType.Network)) shortcuts.Children.Add(LocationShortcut(drive.Name.TrimEnd('\\'), drive.Name, drive.DriveType == DriveType.Removable ? Usb : Drive));
+        shortcuts.Children.Add(driveShortcuts); RefreshDriveShortcuts();
         navigationArea.Children.Add(shortcuts); rail.Children.Add(new ScrollViewer { Content = navigationArea, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         var navBorder = new Border { Width = 208, Child = rail, Background = DesktopTheme.Color("#F7F8FA"), BorderBrush = Line, BorderThickness = new Thickness(0, 0, 1, 0) };
         DockPanel.SetDock(navBorder, Dock.Left); shell.Children.Add(navBorder);
@@ -81,6 +88,7 @@ public sealed class MainWindow : Window
         top.Children.Add(computerLabel);
         var header = new Border { Child = top, Background = Brushes.White, Padding = new Thickness(30, 16, 30, 16), BorderBrush = Line, BorderThickness = new Thickness(0, 0, 0, 1) };
         DockPanel.SetDock(header, Dock.Top); workspace.Children.Add(header);
+        DockPanel.SetDock(deviceBanner, Dock.Top); workspace.Children.Add(deviceBanner);
         var statusLine = new Grid(); statusLine.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16) }); statusLine.ColumnDefinitions.Add(new ColumnDefinition());
         statusLine.Children.Add(DesktopTheme.Icon(History, 16, Muted)); Grid.SetColumn(status, 1); statusLine.Children.Add(status);
         var footer = new Border { Child = statusLine, Background = Brushes.White, Padding = new Thickness(24, 10, 24, 10), BorderBrush = Line, BorderThickness = new Thickness(0, 1, 0, 0) };
@@ -92,15 +100,60 @@ public sealed class MainWindow : Window
         observer.HealthChanged += message => Dispatcher.BeginInvoke(() => { if (!closing && !busy) status.Text = message; });
         Loaded += async (_, _) =>
         {
+            if (initialized) return; initialized = true;
             Initialization = RunAsync(async () =>
             {
                 await ReloadAsync(); observer.Configure(state.ProtectedFolders);
                 await files.NavigateAsync(null, false);
-                status.Text = "Prototype: monitoring runs only while this app is open. " + observer.Health;
+                if (detectDevices)
+                {
+                    devices = new DeviceMonitor(this, ApplyDeviceChangesAsync, message => status.Text = message);
+                    await devices.StartAsync();
+                }
+                status.Text = "Device detection runs in the notification area. Quit stops monitoring. " + observer.Health;
             });
             await Initialization;
         };
-        Closing += (_, _) => { closing = true; files.Dispose(); observer.DisposeAsync().AsTask().GetAwaiter().GetResult(); };
+        Closing += (_, e) =>
+        {
+            if (keepRunning) { e.Cancel = true; Hide(); TrayHidden?.Invoke(); return; }
+            closing = true; devices?.Dispose(); files.Dispose(); observer.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        };
+    }
+    public void Quit() { keepRunning = false; Close(); }
+    private void RefreshDriveShortcuts()
+    {
+        driveShortcuts.Children.Clear();
+        foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType != DriveType.Network)) driveShortcuts.Children.Add(LocationShortcut(drive.Name.TrimEnd('\\'), drive.Name, drive.DriveType == DriveType.Removable ? Usb : Drive));
+    }
+    private async Task ApplyDeviceChangesAsync(IReadOnlyList<VolumeChange> changes)
+    {
+        if (closing) return;
+        RefreshDriveShortcuts();
+        await files.VolumesChangedAsync(changes);
+        if (closing) return;
+        foreach (var change in changes)
+        {
+            string label = string.IsNullOrWhiteSpace(change.Volume.Label) ? "Drive" : change.Volume.Label;
+            string message = $"{label} ({change.Volume.Root.TrimEnd('\\')}) • {change.Kind.ToLowerInvariant()}";
+            var row = new DockPanel();
+            var dismiss = new Button { Content = "Dismiss", Padding = new Thickness(10, 6, 10, 6) }; dismiss.Click += (_, _) => deviceBanner.Visibility = Visibility.Collapsed;
+            DockPanel.SetDock(dismiss, Dock.Right); row.Children.Add(dismiss);
+            if (change.Volume.Ready && change.Kind is "Connected" or "Ready")
+            {
+                string root = change.Volume.Root;
+                var scan = Button("Scan drive", () => ScanAsync(root), glyph: Search); DockPanel.SetDock(scan, Dock.Right); row.Children.Add(scan);
+                var browse = Button("Open drive", async () => { navigation.SelectedIndex = 0; await files.NavigateAsync(root); }, glyph: Folder); DockPanel.SetDock(browse, Dock.Right); row.Children.Add(browse);
+            }
+            var labelRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            labelRow.Children.Add(DesktopTheme.Icon(Usb, 24)); labelRow.Children.Add(new TextBlock { Text = message, Margin = new Thickness(12, 0, 12, 0), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center }); row.Children.Add(labelRow);
+            deviceBanner.Child = row; deviceBanner.Visibility = Visibility.Visible; status.Text = message;
+            DeviceNotification?.Invoke(message + (change.Volume.Ready && change.Kind is "Connected" or "Ready" ? ". Open KevlarEDR to scan this drive." : ""));
+            try { await vault.RecordAsync("Device", change.Kind, change.Volume.Root + " " + change.Volume.Type + " " + label); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            { status.Text = message + "; activity could not be saved: " + ex.Message; }
+        }
+        if (!busy) await ReloadAsync();
     }
     private Button LocationShortcut(string label, string path, string glyph)
     {
@@ -204,7 +257,7 @@ public sealed class MainWindow : Window
         actions.Children.Add(Button("Add an observed folder", () => NavigateAsync(5), glyph: Add));
         actions.Children.Add(Button("Recover a saved version", () => NavigateAsync(3), glyph: Restore));
         var actionsCard = Card(actions); Grid.SetColumn(actionsCard, 1); middle.Children.Add(actionsCard); page.Children.Add(middle);
-        Notice("Observation runs while this app is open. Versions are captured after changes; write blocking and malware containment are planned.");
+        Notice("Observation runs while KevlarEDR is running, including in the notification area. Quit stops monitoring. Versions are captured after changes; write blocking and malware containment are planned.");
         var recent = new StackPanel(); recent.Children.Add(Text("Recent activity", 17, true));
         foreach (var item in state.Activity.Take(3)) recent.Children.Add(EventRow(item));
         if (state.Activity.Count == 0) recent.Children.Add(Text("No activity yet. Add a folder or request your first scan.", 13, color: Muted));
@@ -281,7 +334,8 @@ public sealed class MainWindow : Window
     private void Devices()
     {
         var computer = Label(Computer, Environment.MachineName, "Storage inventory • local computer"); page.Children.Add(Card(computer));
-        foreach (var drive in DriveInfo.GetDrives())
+        Notice("Drive connections and removals refresh automatically while KevlarEDR is running, including in the notification area. New drives offer Open and Scan actions.");
+        foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType != DriveType.Network))
         {
             var layout = new DockPanel(); var tile = IconTile(drive.DriveType == DriveType.Removable ? Usb : Drive, 40); tile.Margin = new Thickness(0, 0, 22, 0); DockPanel.SetDock(tile, Dock.Left); layout.Children.Add(tile);
             var content = new StackPanel(); bool ready = false;
@@ -363,7 +417,7 @@ public sealed class MainWindow : Window
     }
     private void Settings()
     {
-        page.Children.Add(Card(Label(Folder, "Observed folders", "Capture an initial baseline, then preserve readable versions after observed changes. Monitoring stops when this app closes.")));
+        page.Children.Add(Card(Label(Folder, "Observed folders", "Capture an initial baseline, then preserve readable versions after observed changes. Quit from the notification area stops monitoring.")));
         page.Children.Add(Button("Add folder and capture baseline", async () =>
         {
             string? folder = PickFolder("Choose a folder to preserve"); if (folder is null) return;
@@ -391,6 +445,23 @@ public sealed class MainWindow : Window
         var storage = Label(Drive, "Recovery storage", vault.Root);
         storage.Children.Add(Text($"{vault.Limits.MaxFileBytes / (1024 * 1024)} MiB per file  •  {vault.Limits.MaxVaultBytes / (1024 * 1024)} MiB vault  •  {vault.Limits.MaxVersions:N0} version records", 13, true));
         storage.Children.Add(Text("When capacity is exhausted, new captures fail visibly. Existing versions are retained.", 12, color: Muted)); page.Children.Add(Card(storage));
+        var background = Label(Usb, "Background device detection", "Closing the window keeps monitoring active beside the Windows clock. Right-click the shield and choose Quit to stop.");
+        using (var runKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))
+        {
+            var startup = new CheckBox { Content = "Start KevlarEDR in the notification area when I sign in", IsChecked = runKey?.GetValue("KevlarEDR") is string, IsEnabled = keepRunning, Margin = new Thickness(0, 12, 0, 8) };
+            Accessible(startup, "Start device detection when I sign in");
+            async Task ChangeStartupAsync() => await RunAsync(() =>
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+                if (startup.IsChecked == true) key.SetValue("KevlarEDR", "\"" + Environment.ProcessPath! + "\" --background");
+                else key.DeleteValue("KevlarEDR", false);
+                status.Text = startup.IsChecked == true ? "Sign-in startup enabled for this user." : "Sign-in startup disabled for this user.";
+                return Task.CompletedTask;
+            });
+            startup.Checked += async (_, _) => await ChangeStartupAsync(); startup.Unchecked += async (_, _) => await ChangeStartupAsync();
+            background.Children.Add(startup);
+        }
+        page.Children.Add(Card(background));
         Notice("The vault uses ordinary user permissions. Encryption, tamper-resistant storage, a background service, and company management are planned.");
     }
     public async Task SmokeAsync(string reportPath)
@@ -458,6 +529,33 @@ public sealed class MainWindow : Window
         await files.UpAsync(); if (files.CurrentLocation != browserRoot) throw new InvalidOperationException("Up navigation failed.");
         if (await files.NavigateAsync(Path.Combine(browserRoot, "does-not-exist")) || files.CurrentLocation != browserRoot) throw new InvalidOperationException("Failed navigation changed the current folder.");
         if (await File.ReadAllTextAsync(notes) != "Harmless Explorer browsing fixture.") throw new InvalidOperationException("Browsing modified a file.");
+        await files.NavigateAsync(browserRoot, false);
+        var fixtureVolume = new LocalVolume(Path.GetPathRoot(browserRoot)!, DriveType.Fixed, true, "Test system volume");
+        IReadOnlyList<LocalVolume> simulatedVolumes = [fixtureVolume];
+        int deviceEvents = 0; bool detectionError = false, failInventory = false;
+        var arrival = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using (var monitor = new DeviceMonitor(this, async changes =>
+        {
+            deviceEvents += changes.Count; await ApplyDeviceChangesAsync(changes); arrival.TrySetResult();
+        }, _ => detectionError = true, () => failInventory ? throw new IOException("Simulated inventory failure") : simulatedVolumes))
+        {
+            await monitor.StartAsync();
+            if (deviceEvents != 0) throw new InvalidOperationException("Existing volumes produced a false arrival.");
+            simulatedVolumes = [fixtureVolume, new(@"Z:\", DriveType.Removable, true, "SIMULATED FLASH DRIVE")];
+            monitor.SimulateArrivalMessage(); await arrival.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            if (deviceEvents != 1 || deviceBanner.Visibility != Visibility.Visible || !state.Activity.Any(a => a.Operation == "Device" && a.Outcome == "Connected"))
+                throw new InvalidOperationException("Native device message/banner/activity simulation failed.");
+            UpdateLayout(); SaveScreenshot(Path.Combine(Path.GetDirectoryName(reportPath)!, Path.GetFileNameWithoutExtension(reportPath) + "-device-connected.png"));
+            await monitor.ReconcileAsync(); if (deviceEvents != 1) throw new InvalidOperationException("Repeated notifications were not deduplicated.");
+            failInventory = true; await monitor.ReconcileAsync(); failInventory = false;
+            if (!detectionError || deviceEvents != 1) throw new InvalidOperationException("A failed inventory produced a false removal.");
+            simulatedVolumes = [fixtureVolume]; await monitor.ReconcileAsync();
+            if (deviceEvents != 2 || files.CurrentLocation != browserRoot) throw new InvalidOperationException("Unrelated drive removal disturbed the browser.");
+            simulatedVolumes = []; await monitor.ReconcileAsync();
+            if (deviceEvents != 3 || files.CurrentLocation is not null || files.CanScanSelection)
+                throw new InvalidOperationException("Removed current drive left stale file/scan actions.");
+        }
+        deviceBanner.Visibility = Visibility.Collapsed;
         await files.NavigateAsync(null); UpdateLayout();
         navigation.SelectedIndex = 0; UpdateLayout();
         SaveScreenshot(Path.ChangeExtension(reportPath, ".png"));
@@ -468,6 +566,7 @@ public sealed class MainWindow : Window
             DeletedFileRestored = restored, NativeIconGlyphsVerified = DesktopTheme.Glyphs.Length,
             RecoverySearchPassed = true, ActivitySearchPassed = true, CompactLayoutRendered = true,
             FileBrowsingPassed = true, ShellFileIconsPassed = true, FolderHistoryPassed = true,
+            DeviceArrivalRemovalSimulationPassed = true, NativeDeviceMessagePassed = true, DeviceInventoryFailurePassed = true,
             Version = "0.1.0" }, new JsonSerializerOptions { WriteIndented = true }));
     }
     private static IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject

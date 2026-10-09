@@ -28,7 +28,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $publishRoot -Recurse -Force
     $noticesDirectory = Join-Path $publishRoot 'third-party'
     New-Item -ItemType Directory -Path $noticesDirectory -Force | Out-Null
-    foreach ($upstreamProject in @('runtime','wpf')) {
+    foreach ($upstreamProject in @('runtime','wpf','winforms')) {
         foreach ($noticeName in @('LICENSE.TXT','THIRD-PARTY-NOTICES.TXT')) {
             Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dotnet/$upstreamProject/main/$noticeName" -OutFile (Join-Path $noticesDirectory "$upstreamProject-$noticeName") -UseBasicParsing
         }

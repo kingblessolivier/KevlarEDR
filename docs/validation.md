@@ -7,7 +7,7 @@ Date: 2026-10-09. Local environment: Windows 11 Pro x64, build 26200;
 
 `dotnet build KevlarEDR.slnx -c Release`: succeeded with zero warnings/errors.
 
-`dotnet run --project tests/KevlarEDR.Validation -c Release`: 44 scenarios passed.
+`dotnet run --project tests/KevlarEDR.Validation -c Release`: 53 scenarios passed.
 Scenarios cover overwrite/delete and byte-for-byte recovery, destination collisions,
 metadata reopening, same-size blob corruption, full vault, file/record limits,
 locked files, concurrent capture, separate-process locking/cancellation, observer
@@ -16,6 +16,12 @@ binary streaming, missing scan targets, and persistent failed-scan status.
 Browser cases cover directories first, non-recursive listing, hidden-item handling,
 real file size, unchanged source content, bounded/truncated listings, missing folders,
 local-path validation, cancellation, and linked-location identification/rejection.
+Volume scenarios cover a silent startup baseline, connection/removal deduplication,
+delayed readiness, unavailable media, excluded network volumes and Fixed external disks.
+Native desktop smoke sends a synthetic arrival message only to its own HWND, injects
+test inventories, verifies banner/activity updates, inventory-error handling and safe
+navigation after removal. This is simulated; no physical USB insertion/removal was
+performed by the agent.
 
 Real Defender adapter smoke against a harmless text fixture: exit 0; provider
 reported no threats. This establishes scan integration for that fixture, not
@@ -38,6 +44,11 @@ The filesystem UI update was also applied to the default per-user installation:
 the installed binary matches the published build, the seven-section/browser/recovery
 smoke passes, and existing recovery metadata plus a retention marker remain intact.
 
+Background lifecycle check: hidden sign-in launch, second-launch reopening of the
+same process, window close retaining that process, and explicit Quit all passed.
+The update check additionally verifies the desktop shortcut target and per-user
+sign-in command. These checks use the normal Windows executable, not a web mockup.
+
 ## Repeatable commands
 
 ```powershell
@@ -47,8 +58,10 @@ dotnet run --project tests/KevlarEDR.Validation -c Release -- --scan-smoke artif
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1
 # Run this only on a clean test account/VM without an existing installation.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-install.ps1
-# Apply/test a build on the default per-user installation (closes KevlarEDR windows).
+# Apply/test a build on the default per-user installation (quits KevlarEDR first).
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-update.ps1
+# Quit the app first; exercises the installed background process and returns it to stopped.
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-background.ps1
 ```
 
 Local evidence stays under ignored `artifacts/`. CI is configured to upload

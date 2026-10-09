@@ -33,6 +33,14 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 
 [Icons]
 Name: "{userprograms}\KevlarEDR"; Filename: "{app}\KevlarEDR.exe"
+Name: "{userdesktop}\KevlarEDR"; Filename: "{app}\KevlarEDR.exe"; Tasks: desktopicon
+
+[Tasks]
+Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: checkedonce
+Name: "autostart"; Description: "Start device detection in the notification area when I sign in"; Flags: checkedonce
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "KevlarEDR"; ValueData: """{app}\KevlarEDR.exe"" --background"; Tasks: autostart; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\KevlarEDR.exe"; Description: "Open KevlarEDR"; Flags: nowait postinstall skipifsilent

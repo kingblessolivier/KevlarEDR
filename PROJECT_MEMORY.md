@@ -24,6 +24,9 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 - User clarified that OS-style means viewing the actual filesystem and computer
   sections, like File Explorer. The app should start with This PC, real drives and
   personal folders, directory browsing, location/history, file icons and system information.
+- User requires a normally installed app with automatic flash-drive insertion
+  detection, rather than opening an executable from build files. Deliver desktop/
+  Start Menu launch, tray monitoring and optional per-user sign-in startup.
 
 ## Current state
 
@@ -31,6 +34,11 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 - Core: content-addressed file versions, checked restore-as-copy, persisted
   settings/activity/scan outcome, file-change observation, and Defender adapter.
 - Seven desktop sections: This PC, Scans, Devices, Recovery, Activity, Settings, System.
+- Local drive arrivals/removals/readiness are detected automatically using Windows
+  broadcasts plus three-second reconciliation. Connected drive banners offer Open/
+  Scan; events are journaled. Closing hides to the notification area; Quit/sign-out
+  ends observation. The installer supplies desktop/Start Menu launch and sign-in
+  startup; Settings can change startup. This is a user process, not a service.
 - Current UI uses a light File Explorer-style navigation pane, real personal-folder
   shortcuts/drives, a location field, back/forward/up controls, a command bar,
   Details/Icons views, filename filtering, and a selected-file details pane.
@@ -42,7 +50,13 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
   information plus component state. Company computers still require future enrollment.
 - Desktop smoke verifies native glyphs, search/selection, all seven sections,
   compact layout, file-type icons and successful/failed folder-history navigation.
-- Local validation: 44 scenarios passed; harmless real Defender scan completed;
+- Device smoke uses synthetic inventories and a Windows message addressed only to
+  its own HWND; it verifies arrivals/removals, duplicate/error handling, activity
+  and stale browser actions. Hardware insertion/removal has not been physically tested.
+- Background lifecycle verifies hidden launch, single-instance reopening, close
+  to notification area and explicit Quit. Installer updates verify desktop launch
+  and the current user's sign-in startup command.
+- Local validation: 53 scenarios passed; harmless real Defender scan completed;
   desktop pages/recovery smoke and installer/uninstaller retention tests passed.
 - The redesigned setup and portable packages were rebuilt and verified. The app
   is installed per user in LocalAppData/Programs/KevlarEDR; its executable hash
@@ -50,7 +64,7 @@ Last updated: 2026-10-09 (user timezone: Africa/Johannesburg).
 - The Explorer-style update passed installed seven-section/browser/recovery smoke
   and preserved existing recovery metadata during the per-user update.
 - No privileged service, driver, USB blocking, malware containment, or remote
-  management is implemented. Version capture occurs after changes, while UI is open.
+  management is implemented. Version capture occurs after changes, while the app process runs, including in the notification area.
 - Analysis/design documents and an implementation roadmap have now been written.
 - Initial design/docs committed and pushed to `main`; implementation is on
   `feature/local-desktop-app` in PR #1. Main requires `validate` and a PR;

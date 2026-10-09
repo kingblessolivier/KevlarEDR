@@ -11,10 +11,21 @@ internal static class Program
         try
         {
             bool smoke = args.Contains("--smoke");
+            bool created = true;
+            using var instance = smoke ? null : new Mutex(true, "Local\\KevlarEDR." + DesktopSession.UserKey, out created);
+            // A fresh process uses the existing window instead of starting a second observer.
+            if (!smoke && !created)
+            {
+                if (!args.Contains("--background")) DesktopSession.SendToExisting(args.Contains("--exit"));
+                return 0;
+            }
+            if (args.Contains("--exit")) return 0;
             string root = smoke ? Path.Combine(Path.GetTempPath(), "KevlarEDR-smoke-" + Guid.NewGuid().ToString("N"))
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KevlarEDR");
             var app = new Application();
-            var window = new MainWindow(root);
+            var window = new MainWindow(root, !smoke);
+            using var session = smoke ? null : new DesktopSession(window);
+            app.SessionEnding += (_, _) => window.Quit();
             if (smoke) window.Loaded += async (_, _) =>
             {
                 try
@@ -27,7 +38,13 @@ internal static class Program
                 catch (Exception ex) { window.SmokeFailure = ex.Message; }
                 finally { window.Close(); }
             };
-            app.Run(window);
+            if (args.Contains("--background"))
+            {
+                app.MainWindow = window;
+                window.Show(); window.Hide();
+                app.Run();
+            }
+            else app.Run(window);
             return window.SmokeFailure is null ? 0 : 1;
         }
         catch (Exception ex)

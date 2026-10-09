@@ -1,12 +1,15 @@
 # Third-party notices
 
-KevlarEDR uses Microsoft .NET and Windows Presentation Foundation. Their license
+KevlarEDR uses Microsoft .NET, Windows Presentation Foundation and Windows Forms
+(for the notification-area icon). Their license
 and third-party notices are maintained in the upstream projects:
 
 - [.NET runtime license](https://github.com/dotnet/runtime/blob/main/LICENSE.TXT)
 - [.NET runtime notices](https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT)
 - [WPF license](https://github.com/dotnet/wpf/blob/main/LICENSE.TXT)
 - [WPF notices](https://github.com/dotnet/wpf/blob/main/THIRD-PARTY-NOTICES.TXT)
+- [Windows Forms license](https://github.com/dotnet/winforms/blob/main/LICENSE.TXT)
+- [Windows Forms notices](https://github.com/dotnet/winforms/blob/main/THIRD-PARTY-NOTICES.TXT)
 
 The prototype installer is compiled with Inno Setup. This machine's installed
 6.7.3 compiler reports non-commercial use. Review the upstream tool license and

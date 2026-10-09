@@ -24,7 +24,7 @@ automation names identify navigation, controls, searches, and lists. Custom cont
 templates include hover, selection, disabled, and keyboard-focus states.
 
 The kernel does not draw the UI. Protection should eventually remain active in
-a service when the UI closes; the prototype explicitly observes only while open.
+a service when the UI closes; the prototype observes while its user process runs, including in the notification area.
 
 ## Navigation and real states
 

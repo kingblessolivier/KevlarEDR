@@ -24,8 +24,9 @@ The System section displays local computer/Windows/component information.
 
 This app helps request Defender scans and keep versions of selected documents.
 It is not complete ransomware prevention. Changes are observed after they happen;
-earlier preserved versions are what make recovery possible. Close the desktop app
-and its observation stops. Keep an additional separately protected backup.
+earlier preserved versions are what make recovery possible. Closing the window leaves observation and device detection running in the
+notification area. Right-click the shield beside the Windows clock and choose
+**Quit (stop monitoring)** to stop them. Keep an additional separately protected backup.
 
 ## First use
 
@@ -49,8 +50,13 @@ Removing a folder stops observing it; existing versions remain recoverable.
 
 ## Scan a flash drive or folder
 
-Connect the drive, refresh Devices, select the appropriate drive, and request
-a scan; alternatively choose a folder in Scans. Review provider output and status.
+Insert a flash drive while KevlarEDR is running. This PC, the drive sidebar and
+Devices update automatically. A connection banner offers **Open drive** and
+**Scan drive**; the notification area also shows an alert when Windows permits
+notifications. Detection also notices new external volumes reported as Fixed.
+Choose **Scan drive** and review its result; scans are explicitly requested, not
+automatically started. Removal updates the lists; browsing a removed drive
+returns to This PC and clears stale actions. Alternatively choose a folder in Scans. Review provider output and status.
 The prototype requests a scan without automatic remediation. Errors, permission
 failures, and unscanned files need attention. Completion is not proof of safety.
 Device blocking/read-only enforcement is planned and is not available in 0.1.
@@ -69,7 +75,7 @@ may help in some circumstances; overwritten space can make recovery impossible.
 
 ## Activity and storage
 
-Activity records captures, skips/errors, scans, and restores. Settings shows local
+Activity records drive connections/readiness/removals, captures, skips/errors, scans, and restores. Settings shows local
 data location and configured limits. A full vault declines new captures while
 retaining earlier versions. Never erase the vault to clear a warning before
 exporting recovery copies you need.

@@ -15,9 +15,13 @@ the roadmap, not under released functionality.
 - Native Windows desktop app, drive discovery, Defender scan requests,
   local protected-file versions, verified restore-as-copy, and activity history.
 - Self-contained Windows x64 executable and installation package.
+- Automatic local drive arrival/removal/readiness detection using Windows events
+  plus periodic reconciliation; connection banners, scan/open actions and activity.
+- Notification-area operation, explicit Quit, single-instance reopening, desktop
+  shortcut and optional per-user sign-in startup (also controlled in Settings).
 - Automated recovery simulations and Windows CI.
-- Post-change observation of selected folders while the desktop app is open.
-- 44 core validation scenarios plus native desktop and installer smoke tests.
+- Post-change observation of selected folders while the process runs, including in the notification area.
+- 53 core validation scenarios plus native desktop and installer smoke tests.
 - Explorer-style This PC with personal folders/drives, local directory browsing,
   native Windows file-type icons, Details/Icons views, location/back/forward/up,
   filename filtering, hidden items and selected-file details.

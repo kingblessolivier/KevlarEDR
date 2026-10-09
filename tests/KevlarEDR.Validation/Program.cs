@@ -160,6 +160,19 @@ try
         try { await fileBrowser.ReadAsync(browseRoot, cancellation: cancelledBrowse.Token); } catch (OperationCanceledException) { cancelled = true; }
         Assert(cancelled, "Browser enumeration honors cancellation");
     }
+    var volumeTracker = new VolumeTracker();
+    var systemVolume = new LocalVolume(@"C:\", DriveType.Fixed, true, "System");
+    var flashVolume = new LocalVolume(@"Z:\", DriveType.Removable, false, "Fixture USB");
+    Assert(volumeTracker.Update([systemVolume]).Count == 0, "Existing drives establish a silent startup baseline");
+    Assert(volumeTracker.Update([systemVolume, flashVolume]).Single().Kind == "Connected", "New removable drive is detected before media is ready");
+    Assert(volumeTracker.Update([systemVolume, flashVolume]).Count == 0, "Repeated device notifications do not duplicate connection events");
+    flashVolume = flashVolume with { Ready = true };
+    Assert(volumeTracker.Update([systemVolume, flashVolume]).Single().Kind == "Ready", "Delayed mount readiness enables scan actions");
+    Assert(volumeTracker.Update([systemVolume]).Single() is { Kind: "Removed", Volume.Root: @"Z:\" }, "Removed flash drive keeps its original identity in the event");
+    Assert(volumeTracker.Update([systemVolume]).Count == 0, "Repeated removal notifications do not duplicate events");
+    Assert(volumeTracker.Update([systemVolume, new(@"N:\", DriveType.Network, true, "Network")]).Count == 0, "Network drives are excluded from local connection detection");
+    Assert(volumeTracker.Update([systemVolume, new(@"Y:\", DriveType.Fixed, true, "External disk")]).Single().Kind == "Connected", "New volumes reported as Fixed are detected too");
+    Assert(volumeTracker.Update([systemVolume with { Ready = false }]).Any(c => c.Kind == "Unavailable"), "Media becoming unavailable is distinct from a missing volume");
     if (args.Length == 2 && args[0] == "--scan-smoke")
     {
         string scanFixture = Path.Combine(fixtureRoot, "scan-fixture"); Directory.CreateDirectory(scanFixture);
